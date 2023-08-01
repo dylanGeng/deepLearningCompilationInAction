@@ -1,0 +1,51 @@
+%# -*- coding: utf-8-unix -*-
+%%==================================================
+\chapter{GPU的体系架构及CUDA编程模型}
+
+随着人工智能特别是以GPT为代表的Generative AI的迅猛发展，GPU已经成为了一种不可或缺的工具，甚至企业都以拥有多少高端GPU作为抓住风口能力的衡量标准。
+相比之下，CPU虽然在传统计算领域占据主导地位，但在处理深度学习任务时却不及GPU出色，本文将讨论：
+
+\begin{enumerate}
+	\item 为什么AI任务通常选择GPU而不是CPU；
+    \item GPU在AI任务中的优势；
+    \item 从GPU的体系架构上探讨从Volta到最新Hopper四代架构的演进，以及其在性能和功能上的提升。
+\end{enumerate}
+
+\section{数据通信}
+
+\subsection{NVLink}
+
+NVLink是什么的？以及为什么在大模型时代大家都需要用到它呢？
+
+首先我们知道在大模型时代，通常深度学习网络都具有巨大的参数数量和复杂的结构，需要处理大量的数据。分布式训练将这些大模型分割成多个部分，由多个GPU或者计算节点之间并行处理，每个计算节点处理自己的数据子集。
+然后通过全局通信，参数同步等方式进行梯度传播，此时GPU之间的通信带宽就变的越来越重要。
+
+在NVLink出现之前，GPU与GPU之间的数据交互主要通过PCIe(Peripheral Component Interconnect Express)总线进行。但PCIe存在两个问题：
+
+\begin{enumerate}
+	\item PCIe总线的带宽相对有限，其中PCIe 4.0x16的最大带宽是64GB/s；
+    \item PCIe总线的延迟相对较高，在GPU之间传输数据时，每次数据传输都需要通过CPU和主机内存来完成。
+\end{enumerate}
+
+这种传输路径会导致额外的延迟，并降低数据传输的效率。然而深度学习应用中需要更高的带宽和更低的延迟，PCIe自然时无法满足当下的AI训练任务。
+
+NVLink利用高带宽、低延迟的通信通道，直接将多个GPU连接在一起，实现高速、高效的数据传输和共享。通过NVLink，GPU之间的数据交互可以直接在GPU之间进行，而无需通过CPU和主机内存。
+这种直接访问内存(DMA)的方式大大减少了数据传输的复制和延迟，提高了数据共享的效率。此外，NVLink还提供了一致的内存空间，使得多个GPU能够共享同一份内存，简化了程序设计和数据管理的复杂性。
+
+\begin{figure}[!htp]
+    \centering
+    \includegraphics[width=7cm]{example/pcie.png}
+    \hspace{1cm}
+    \includegraphics[width=7cm]{example/nvlink.png}
+    \bicaption{中文题图}
+    {English caption}
+    \label{fig5}
+\end{figure}
+
+这里的主要思想就是GPU之间采用NVLink进行互联，实现GPU对卡间HBM的高速访问和PCIe进行互补。
+
+参考文献的引用：
+\begin{itemize}
+    \item https://readpaper.feishu.cn/docx/UwT2dQsiko6u0RxoiXRcBtwfnAf。
+    \item https://github.com/chenzomi12/DeepLearningSystem.
+\end{itemize}
